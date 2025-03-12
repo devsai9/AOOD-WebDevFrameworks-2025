@@ -1,0 +1,78 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#task {
+    text-align: center;
+    max-width: min(100%, 25.8rem);
+}
+
+#gameInfo {
+    margin-top: 5px;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    width: min(100%, 25.8rem);
+}
+
+#reset {
+    cursor: pointer;
+    border: 0;
+    outline: 0;
+    background-color: #d5d5d5;
+    padding: 0.5rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: opacity 0.4s;
+}
+
+#reset:hover {
+    background-color: #c5c5c5;
+}
+
+#clickSpace {
+    border-radius: 10px;
+    border: 3px solid #d5d5d5;
+    width: min(100%, 25.5rem);
+    height: 15rem;
+    cursor: pointer;
+}
+
+#clicks {
+    font-weight: bold;
+    font-size: 1.25rem;
+}
+
+#scoreboard > h2 {
+    margin-bottom: 0;
+}
+
+.scoreboardEntry {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    padding: 0.5rem 0rem;
+    padding-left: 0.5rem;
+    background-color: #d1d1d1;
+}
+
+.scoreboardEntry:nth-of-type(odd) {
+    background-color: #727272;
+    color: white;
+}
+
+.scoreboardEntry:nth-of-type(1) {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.scoreboardEntry:nth-last-of-type(1) {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* .scoreboardEntry > span {
+    text-align: center;
+} */
