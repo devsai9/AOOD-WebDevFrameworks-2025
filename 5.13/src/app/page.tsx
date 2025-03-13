@@ -59,7 +59,7 @@ export default function Home() {
         setClickCount((prevClickCount) => {
             if (prevClickCount === 0) {
                 start.current = new Date();
-                clearInterval(intervalRef.current);
+                if (intervalRef.current) clearInterval(intervalRef.current);
                 intervalRef.current = setInterval(time, 50);
             }
             return prevClickCount + 1;
