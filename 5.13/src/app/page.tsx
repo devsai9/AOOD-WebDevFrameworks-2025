@@ -1,4 +1,5 @@
 'use client'
+import { ExampleChart } from "./components/charts";
 import styles from "./page.module.css";
 import { useEffect, useRef, useState } from "react";
 
@@ -209,7 +210,7 @@ export default function Home() {
             <div id={styles.scoreboard} ref={scoreboard}></div>
             {modalOpen && 
             <div id={styles.modal}>
-                <p>Hi</p>
+                <ExampleChart />
             </div>}
         </>
     );
