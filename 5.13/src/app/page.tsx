@@ -1,6 +1,6 @@
 'use client'
 import styles from "./page.module.css";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type localStorageObj = {
     name: string,
@@ -11,90 +11,91 @@ type localStorageObj = {
 }
 
 export default function Home() {
-    let clickSpace: HTMLDivElement;
-    let output: HTMLParagraphElement;
-    let scoreboard: HTMLDivElement;
-    let reset: HTMLButtonElement;
-    let playerName: string;
+    const [playerName, setPlayerName] = useState("Anonymous");
+    const clickSpace = useRef<HTMLDivElement | null>(null);
+    const scoreboard = useRef<HTMLDivElement | null>(null);
+    const reset = useRef<HTMLButtonElement | null>(null);
+
+    const [clickCount, setClickCount] = useState(0);
+    const start = useRef<Date>(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [gameOver, setGameOver] = useState(false);
+    const [timeVar, setTimeVar] = useState(0.00);
+
+    const [modalOpen, setModalOpen] = useState(true);
+
+    const MAX_TIME = 10;
+    const SCOREBOARD_SIZE = 10;
 
     useEffect(() => {
-        clickSpace = document.querySelector('#clickSpace') as HTMLDivElement;
-        output = document.querySelector('#clicks') as HTMLParagraphElement;
-        scoreboard = document.querySelector('#scoreboard') as HTMLDivElement;
-        reset = document.querySelector('#reset') as HTMLButtonElement;
-
-        playerName = prompt("Enter your username: ") || "Anonymous";
-
         loadScoreboard();
-        toggleReset();
-
-        (document.querySelector('#task') as HTMLParagraphElement).innerHTML = `Hello, ${playerName} 👋<br>See how many times you can click the rectangle below in ${MAX_TIME} seconds:`;
+        toggleResetButton();
 
         window.addEventListener("contextmenu", (e) => {
             if (!gameOver) e.preventDefault();
         });
-        
-        clickSpace.addEventListener("mousedown", () => {
-            if (gameOver) return;
-    
-            clickSpace.style.backgroundColor = "#f3f3f3";
-            clickCount++;
-    
-            if (clickCount == 1) {
-                start = new Date();
-                interval = setInterval(time, 50);
-            }
-        });
-    
-        clickSpace.addEventListener("mouseup", () => {
-            setTimeout(() => {
-                clickSpace.style.backgroundColor = "#ffffff";
-            }, 50);
-        });
-    
-        reset.addEventListener("click", () => {
-            clickCount = 0;
-            timeVar = null;
-            start = null;
-            gameOver = false;
-            clearInterval(interval);
-            interval = null;
-            output.innerHTML = `Clicks: 0<br>Time: 00.00`;
-            toggleReset();
-        });
     }, []);
 
-    let clickCount = 0;
-    let start: Date | null = null;
-    let interval: any = null;
-    let gameOver: boolean = false;
-    let timeVar: number | null = null;
-    const MAX_TIME = 10;
-    const SCOREBOARD_SIZE = 10;
+    useEffect(() => {
+        if (gameOver) {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            store();
+            toggleResetButton();
+        }
+    }, [gameOver]);
+
+    function registerClick() {
+        if (gameOver) return;
+    
+        (clickSpace.current as HTMLDivElement).style.backgroundColor = "#727272";
+    
+        setClickCount((prevClickCount) => {
+            if (prevClickCount === 0) {
+                start.current = new Date();
+                clearInterval(intervalRef.current);
+                intervalRef.current = setInterval(time, 50);
+            }
+            return prevClickCount + 1;
+        });
+    }
+    
+    function handleReset() {
+        setClickCount(0);
+        setTimeVar(0);
+        setGameOver(false);
+        start.current = null;
+        toggleResetButton(false);
+    }
 
     function time() {
+        if (gameOver || !start.current) return;
+
         const now = new Date();
-        const diff = now.getTime() - (start as Date).getTime();
-        timeVar = Math.round(diff) / 1000;
+        const diff = now.getTime() - (start.current as Date).getTime();
+        const newTime = Math.round(diff) / 1000;
 
-        output.innerHTML = `Clicks: ${clickCount}<br>Time: ${timeVar}`;
-
-        if ((diff / 1000) >= MAX_TIME) {
-            clearInterval(interval);
-            gameOver = true;
-            store();
-            toggleReset();
+        if (newTime >= MAX_TIME) {
+            setGameOver(true);
+            return;
         }
+
+        setTimeVar(newTime);
     }
 
     function store() {
+        const finalClickCount = clickCount;
+        const finalTimeVar = timeVar;
+
         const obj = {
             name: playerName,
-            score: clickCount,
-            speed: timeVar,
-            rate: clickCount / (timeVar || 10),
+            score: finalClickCount,
+            speed: finalTimeVar,
+            rate: finalClickCount / (finalTimeVar || 10),
             date: new Date()
-        }
+        };
 
         const current = JSON.parse(localStorage.getItem("scoreboard") as string) || [];
         current.push(obj);
@@ -103,43 +104,38 @@ export default function Home() {
         loadScoreboard();
     }
 
-    function toggleReset() {
-        if (gameOver) {
-            reset.style.opacity = "1";
-            reset.style.pointerEvents = "all";
+    function toggleResetButton(customOverride?: boolean) {
+        if (customOverride || (customOverride == null && gameOver)) {
+            (reset.current as HTMLButtonElement).style.opacity = "1";
+            (reset.current as HTMLButtonElement).style.pointerEvents = "all";
         } else {
-            reset.style.opacity = "0";
-            reset.style.pointerEvents = "none";
+            (reset.current as HTMLButtonElement).style.opacity = "0";
+            (reset.current as HTMLButtonElement).style.pointerEvents = "none";
         }
     }
 
     function loadScoreboard() {
-        scoreboard.innerHTML = `
+        (scoreboard.current as HTMLDivElement).innerHTML = `
         <h2>Scoreboard</h2>
-        <div class="scoreboardEntry">
+        <div class="${styles.scoreboardEntry}">
             <span><b>Username</b></span>
             <span><b>Click rate</b></span>
             <span><b>Clicks / Seconds</b></span>
             <span><b>Date</b></span>
         </div>
         `;
+
         const current = JSON.parse(localStorage.getItem("scoreboard") as string) || [];
         current.sort((a: localStorageObj, b: localStorageObj) => {
             if (b.rate === a.rate) return b.score - a.score;
             return b.rate - a.rate;
         });
 
-        /* 
-        <div class="scoreboardEntry">
-            <span>Username</span>
-            <span>Click rate</span>
-            <span>Clicks / Seconds</span>
-            <span>Time</span>
-        </div>
-        */
-        current.forEach((element: localStorageObj) => {
+        current.forEach((element: localStorageObj, index: number) => {
+            if (index >= SCOREBOARD_SIZE) return;
+
             const div = document.createElement("div");
-            div.classList.add("scoreboardEntry");
+            div.classList.add(styles.scoreboardEntry);
 
             const name = document.createElement("span");
             name.innerText = element.name;
@@ -158,13 +154,13 @@ export default function Home() {
             time.innerText = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
             div.appendChild(time);
 
-            scoreboard.appendChild(div);
+            (scoreboard.current as HTMLDivElement).appendChild(div);
         });
 
         const diff = SCOREBOARD_SIZE - current.length;
         for (let i = 0; i < diff; i++) {
             const div = document.createElement("div");
-            div.classList.add("scoreboardEntry");
+            div.classList.add(styles.scoreboardEntry);
 
             const name = document.createElement("span");
             name.innerText = "-";
@@ -182,22 +178,39 @@ export default function Home() {
             time.innerText = "-";
             div.appendChild(time);
 
-            scoreboard.appendChild(div);
+            (scoreboard.current as HTMLDivElement).appendChild(div);
         }
     }
 
     return (
         <>
-        <div className={`container ${styles.container}`}>
-            <h1>Clicker Game?</h1>
-            <p id={`task ${styles.task}`}></p>
-            <div id={`clickSpace ${styles.clickSpace}`}></div>
-            <div id={`gameInfo ${styles.gameInfo}`}>
-                <p id={`clicks ${styles.clicks}`}>Clicks: 0<br />Time: 00.00</p>
-                <button id={`reset ${styles.reset}`}>Reset</button>
+            <div className={`container ${styles.container}`}>
+                <h1>Clicker Game?</h1>
+                <p id={styles.task}>Hello, {playerName} 👋<br />See how many times you can click the rectangle below in {MAX_TIME} seconds:</p>
+                <div
+                    id={styles.clickSpace}
+                    ref={clickSpace}
+                    onMouseDown={registerClick}
+                    onMouseUp={() => {
+                        setTimeout(() => {
+                            if (clickSpace.current) {
+                                clickSpace.current.style.backgroundColor = "var(--background)";
+                            }
+                        }, 50);
+                    }}
+                ></div>
+                <div id={styles.gameInfo}>
+                    <p id={styles.clicks}>Clicks: {clickCount}<br />Time: {timeVar}</p>
+                    <button id={styles.reset} ref={reset} type="button" onClick={handleReset}>
+                        Reset
+                    </button>
+                </div>
             </div>
-        </div>
-        <div id={`scoreboard ${styles.scoreboard}`}></div>
+            <div id={styles.scoreboard} ref={scoreboard}></div>
+            {modalOpen && 
+            <div id={styles.modal}>
+                <p>Hi</p>
+            </div>}
         </>
     );
 }

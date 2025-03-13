@@ -44,6 +44,13 @@
 #clicks {
     font-weight: bold;
     font-size: 1.25rem;
+    margin: 0;
+    margin-block: 10px;
+}
+
+.container > h1, #task, #gameInfo > p, #scoreboard * {
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #scoreboard > h2 {
@@ -56,11 +63,12 @@
     padding: 0.5rem 0rem;
     padding-left: 0.5rem;
     background-color: #d1d1d1;
+    color: var(--background);
 }
 
 .scoreboardEntry:nth-of-type(odd) {
     background-color: #727272;
-    color: white;
+    color: var(--foreground);
 }
 
 .scoreboardEntry:nth-of-type(1) {
@@ -73,6 +81,22 @@
     border-bottom-right-radius: 10px;
 }
 
-/* .scoreboardEntry > span {
-    text-align: center;
-} */
+#modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #727272;
+    border: 3px solid white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px 10px rgba(255, 255, 255, 0.401);
+    width: 600px;
+    height: 600px;
+}
+
+#modal * {
+    margin: 0;
+}
