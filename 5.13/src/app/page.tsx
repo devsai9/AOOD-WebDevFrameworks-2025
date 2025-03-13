@@ -1,5 +1,5 @@
 'use client'
-import { ExampleChart } from "./components/charts";
+import { Chart } from "./components/chart/charts";
 import styles from "./page.module.css";
 import { useEffect, useRef, useState } from "react";
 
@@ -23,12 +23,15 @@ export default function Home() {
     const [gameOver, setGameOver] = useState(false);
     const [timeVar, setTimeVar] = useState(0.00);
 
-    const [modalOpen, setModalOpen] = useState(true);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [xNum, setXNum] = useState(0);
+    const [yData, setYData] = useState<number[]>([])
 
     const MAX_TIME = 10;
     const SCOREBOARD_SIZE = 10;
 
     useEffect(() => {
+        setPlayerName(prompt("Enter your username:") || "Anonymous");
         loadScoreboard();
         toggleResetButton();
 
@@ -126,11 +129,11 @@ export default function Home() {
         </div>
         `;
 
-        const current = JSON.parse(localStorage.getItem("scoreboard") as string) || [];
-        current.sort((a: localStorageObj, b: localStorageObj) => {
-            if (b.rate === a.rate) return b.score - a.score;
-            return b.rate - a.rate;
-        });
+        const current = (JSON.parse(localStorage.getItem("scoreboard") as string) || [])
+            .sort((a: localStorageObj, b: localStorageObj) => {
+                if (b.rate === a.rate) return b.score - a.score;
+                return b.rate - a.rate;
+            });
 
         current.forEach((element: localStorageObj, index: number) => {
             if (index >= SCOREBOARD_SIZE) return;
@@ -138,8 +141,22 @@ export default function Home() {
             const div = document.createElement("div");
             div.classList.add(styles.scoreboardEntry);
 
-            const name = document.createElement("span");
-            name.innerText = element.name;
+            const name = document.createElement("div");
+
+            const nameP = document.createElement("p");
+            nameP.innerText = element.name;
+            name.appendChild(nameP);
+
+            const dataOpener = document.createElement("span");
+            dataOpener.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi-file-earmark-bar-graph-fill" viewBox="0 0 16 16">
+                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1m.5 10v-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5m-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5z"/>
+            </svg>
+            `;
+            dataOpener.title = "Open Player Data";
+            dataOpener.addEventListener('click', () => openGraph(element.name));
+            name.appendChild(dataOpener);
+
             div.appendChild(name);
 
             const rate = document.createElement("span");
@@ -183,34 +200,62 @@ export default function Home() {
         }
     }
 
+    function openGraph(username: string) {
+        const current = (JSON.parse(localStorage.getItem("scoreboard") as string) || [])
+            .filter((entry: localStorageObj) => entry.name === username)
+            .sort((a: localStorageObj, b: localStorageObj) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        setXNum(current.length);
+        setYData(current.map((entry: localStorageObj) => entry.rate.toFixed(2)));
+
+        setModalOpen(true);
+    }
+
     return (
         <>
-            <div className={`container ${styles.container}`}>
-                <h1>Clicker Game?</h1>
-                <p id={styles.task}>Hello, {playerName} 👋<br />See how many times you can click the rectangle below in {MAX_TIME} seconds:</p>
-                <div
-                    id={styles.clickSpace}
-                    ref={clickSpace}
-                    onMouseDown={registerClick}
-                    onMouseUp={() => {
-                        setTimeout(() => {
-                            if (clickSpace.current) {
-                                clickSpace.current.style.backgroundColor = "var(--background)";
-                            }
-                        }, 50);
-                    }}
-                ></div>
-                <div id={styles.gameInfo}>
-                    <p id={styles.clicks}>Clicks: {clickCount}<br />Time: {timeVar}</p>
-                    <button id={styles.reset} ref={reset} type="button" onClick={handleReset}>
-                        Reset
-                    </button>
+            <div className="wrapper">
+                <div className={`container ${styles.container}`}>
+                    <h1>Clicker Game?</h1>
+                    <p id={styles.task}>Hello, {playerName} 👋<br />See how many times you can click the rectangle below in {MAX_TIME} seconds:</p>
+                    <div
+                        id={styles.clickSpace}
+                        ref={clickSpace}
+                        onMouseDown={registerClick}
+                        onMouseUp={() => {
+                            setTimeout(() => {
+                                if (clickSpace.current) {
+                                    clickSpace.current.style.backgroundColor = "var(--background)";
+                                }
+                            }, 50);
+                        }}
+                    ></div>
+                    <div id={styles.gameInfo}>
+                        <p id={styles.clicks}>Clicks: {clickCount}<br />Time: {timeVar}</p>
+                        <button 
+                            id={styles.reset} 
+                            ref={reset} 
+                            type="button" 
+                            onClick={handleReset}
+                        >
+                            Reset
+                        </button>
+                    </div>
                 </div>
+                <div id={styles.scoreboard} ref={scoreboard}></div>
             </div>
-            <div id={styles.scoreboard} ref={scoreboard}></div>
             {modalOpen && 
             <div id={styles.modal}>
-                <ExampleChart />
+                <Chart xNum={xNum} yData={yData} />
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    className={styles.bi}
+                    onClick={() => setModalOpen(false)}>
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/>
+                </svg>
             </div>}
         </>
     );

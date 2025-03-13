@@ -1,11 +1,16 @@
 import dynamic from "next/dynamic";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export function ExampleChart() {
+type Props = {
+    xNum: number,
+    yData: number[]
+}
 
-    const option = {
+export function Chart(props: Props) {
+
+    const options = {
         chart: {
-            id: 'apexchart-example',
+            id: 'player-data',
             toolbar: {
                 show: true,
                 offsetX: 0,
@@ -17,25 +22,31 @@ export function ExampleChart() {
                     zoomin: false,
                     zoomout: false,
                     pan: false,
-                    reset: 0,
+                    reset: false,
                     customIcons: []
                 },
-                autoSelected: 'zoom'
+                autoSelected: undefined
             },
         },
         xaxis: {
-            categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999]
+            categories: Array.from({ length: props.xNum }, (_, i) => i + 1)
         }
     }
 
     const series = [{
-        name: 'series-1',
-        data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
+        name: 'cps',
+        data: props.yData
     }]
 
     return (
         <>
-            <ApexChart type="line" options={option} series={series} height={200} width={500} />
+            <ApexChart
+                type="line"
+                options={options}
+                series={series}
+                height={200}
+                width={500} 
+                className="chart" />
         </>
     )
 

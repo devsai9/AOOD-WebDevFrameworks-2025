@@ -81,6 +81,27 @@
     border-bottom-right-radius: 10px;
 }
 
+.scoreboardEntry > span {
+    display: inline-flex;
+    align-items: center;
+}
+
+.scoreboardEntry > div {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.scoreboardEntry > div > * {
+   margin: 0;
+}
+
+.scoreboardEntry > div > span > svg {
+    margin-top: 5px;
+    scale: 1.3;
+    cursor: pointer;
+}
+
 #modal {
     position: absolute;
     top: 50%;
@@ -89,14 +110,22 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #727272;
+    background-color: var(--foreground);
     border: 3px solid white;
     border-radius: 10px;
     box-shadow: 0 0 10px 10px rgba(255, 255, 255, 0.401);
-    width: 300px;
+    width: 600px;
     height: 300px;
 }
 
 #modal * {
     margin: 0;
+}
+
+#modal > .bi {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    cursor: pointer;
+    scale: 1.2;
 }
