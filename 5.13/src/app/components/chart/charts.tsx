@@ -27,9 +27,15 @@ export function Chart(props: Props) {
                 },
                 autoSelected: undefined
             },
+            sparkline: {
+                enabled: false
+            }
         },
         xaxis: {
             categories: Array.from({ length: props.xNum }, (_, i) => i + 1)
+        },
+        tooltip: {
+            enabled: true
         }
     }
 
